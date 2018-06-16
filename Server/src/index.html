@@ -41,6 +41,12 @@
 		<script src="assets/js/html5shiv.min.js"></script>
 		<script src="assets/js/respond.min.js"></script>
 		<![endif]-->
+
+        <style>
+            .modal-dialog {
+                 width: 80% !important;;
+            }
+        </style>
 	</head>
 
 	<body class="no-skin">
@@ -82,35 +88,35 @@
 					try{ace.settings.loadState('sidebar')}catch(e){}
 				</script>
 
-				<div class="sidebar-shortcuts" id="sidebar-shortcuts">
-					<div class="sidebar-shortcuts-large" id="sidebar-shortcuts-large">
-						<button class="btn btn-success">
-							<i class="ace-icon fa fa-signal"></i>
-						</button>
+				<!--<div class="sidebar-shortcuts" id="sidebar-shortcuts">-->
+					<!--<div class="sidebar-shortcuts-large" id="sidebar-shortcuts-large">-->
+						<!--<button class="btn btn-success">-->
+							<!--<i class="ace-icon fa fa-signal"></i>-->
+						<!--</button>-->
 
-						<button class="btn btn-info">
-							<i class="ace-icon fa fa-pencil"></i>
-						</button>
+						<!--<button class="btn btn-info">-->
+							<!--<i class="ace-icon fa fa-pencil"></i>-->
+						<!--</button>-->
 
-						<button class="btn btn-warning">
-							<i class="ace-icon fa fa-users"></i>
-						</button>
+						<!--<button class="btn btn-warning">-->
+							<!--<i class="ace-icon fa fa-users"></i>-->
+						<!--</button>-->
 
-						<button class="btn btn-danger">
-							<i class="ace-icon fa fa-cogs"></i>
-						</button>
-					</div>
+						<!--<button class="btn btn-danger">-->
+							<!--<i class="ace-icon fa fa-cogs"></i>-->
+						<!--</button>-->
+					<!--</div>-->
 
-					<div class="sidebar-shortcuts-mini" id="sidebar-shortcuts-mini">
-						<span class="btn btn-success"></span>
+					<!--<div class="sidebar-shortcuts-mini" id="sidebar-shortcuts-mini">-->
+						<!--<span class="btn btn-success"></span>-->
 
-						<span class="btn btn-info"></span>
+						<!--<span class="btn btn-info"></span>-->
 
-						<span class="btn btn-warning"></span>
+						<!--<span class="btn btn-warning"></span>-->
 
-						<span class="btn btn-danger"></span>
-					</div>
-				</div><!-- /.sidebar-shortcuts -->
+						<!--<span class="btn btn-danger"></span>-->
+					<!--</div>-->
+				<!--</div>&lt;!&ndash; /.sidebar-shortcuts &ndash;&gt;-->
 
 				<ul class="nav nav-list">
 					<li class="active">
@@ -386,10 +392,10 @@
 															<!--<label class="col-sm-3 control-label no-padding-right no-padding-left" for="form-field-1"> Git Repo </label>-->
 
 															<div class="col-sm-12">
-																<input type="text" id="git-repo-form-field" placeholder="Repo Path" class="col-sm-3">
-																<input type="text" id="git-branch-form-field" placeholder="Git Branch" class="col-sm-3">
-																<input type="text" id="source-form-field" placeholder="Source File" class="col-sm-3">
-																<input type="text" id="parameters-form-field" placeholder="Parameters" class="col-sm-3">
+																<input type="text" id="git-repo-form-field" placeholder="Repo Path" class="col-sm-3" tabindex="0">
+																<input type="text" id="git-branch-form-field" placeholder="Git Branch" class="col-sm-3" tabindex="1">
+																<input type="text" id="source-form-field" placeholder="Source File" class="col-sm-3" tabindex="2">
+																<input type="text" id="parameters-form-field" placeholder="Parameters" class="col-sm-3" tabindex="3">
 															</div>
 
 															<div class="col-sm-3 pull-right" style="margin-top: 1em">
@@ -498,6 +504,7 @@
 		<!--[if lte IE 8]>
 		  <script src="assets/js/excanvas.min.js"></script>
 		<![endif]-->
+		<script src="assets/js/jquery-ui.min.js"></script>
 		<script src="assets/js/jquery-ui.custom.min.js"></script>
 		<script src="assets/js/jquery.ui.touch-punch.min.js"></script>
 		<script src="assets/js/jquery.easypiechart.min.js"></script>
@@ -506,6 +513,9 @@
 		<script src="assets/js/jquery.flot.pie.min.js"></script>
 		<script src="assets/js/jquery.flot.resize.min.js"></script>
 		<script src="assets/js/jquery.flot.time.js"></script>
+
+        <link rel="stylesheet" href="assets/css/jquery.gritter.min.css">
+        <script src="assets/js/jquery.gritter.min.js"></script>
 
         <script src="assets/js/bootbox.js"></script>
 
@@ -592,17 +602,31 @@
 						cpu.push([new Date().getTime(), data.CPU]);
 						memory.push([new Date().getTime(), data.Memory/1024]);
 
-						if(cpu.length > 120){
+						if(cpu.length > 60){
 							cpu.shift();
 						}
 
-						if(memory.length > 120){
+						if(memory.length > 60){
 							memory.shift();
 						}
 
 						updateMachineStatePlot();
 					});
 				}, 5000);
+
+                $("#git-repo-form-field").focusin(function(){
+                    $("#git-repo-form-field").css("border", "")
+                });
+
+                $("#git-repo-form-field").focusout(function(){
+                    $.get("/getGitBranches", {"gitRepo":$("#git-repo-form-field").val()}).done(function(data){
+                        $( "#git-branch-form-field" ).autocomplete({
+                            source: data.Branches
+                        });
+					}).fail(function(data){
+                        $("#git-repo-form-field").css("border", "solid thin red");
+					});
+                });
 
 				$('#job-submit-button').click(function(){
 					$.get( "/addJob", {
@@ -637,6 +661,77 @@
 					}
 				}
 
+				var showJobModal = function(jobId, data, buttonMessage, confirmMessage, confirmTitle){
+				    var dynButtons = {
+                        cancel: {
+                            label: "Close",
+                            className: 'btn-info',
+                            callback: function(){
+
+                            }
+                        }
+                    };
+
+				    if(buttonMessage != null)
+				    {
+                        dynButtons = {
+                            stopJob: {
+                                label: buttonMessage,
+                                className: 'btn-danger',
+                                callback: function(){
+                                    bootbox.confirm({
+                                        title: confirmTitle,
+                                        message: confirmMessage,
+                                        buttons: {
+                                            cancel: {
+                                                label: '<i class="fa fa-times"></i> Cancel'
+                                            },
+                                            confirm: {
+                                                label: '<i class="fa fa-check"></i> '+buttonMessage,
+                                                className: 'btn-danger'
+                                            }
+                                        },
+                                        callback: function (result) {
+                                            if(result == true){
+                                                $.get("/stopJob", {"jobId":jobId}).done(function(stopJobResult){
+                                                    $.gritter.add({
+                                                        title:buttonMessage+" Succeeded",
+                                                        text:"Job "+jobId+" was stopped or removed successfully",
+                                                        class_name:"gritter-info"
+                                                    });
+                                                }).fail(function(stopJobFailure){
+                                                    $.gritter.add({
+                                                        title:buttonMessage+" Failed",
+                                                        text:stopJobFailure.responseText,
+                                                        class_name:"gritter-error"
+                                                    });
+                                                });
+                                            }else{
+                                                showJobModal(data, buttonMessage, confirmMessage, confirmTitle);
+                                            }
+                                        }
+                                    });
+                                }
+                            },
+                            cancel: {
+                                label: "Close",
+                                className: 'btn-info'
+                            }
+                        }
+                    }
+
+				    bootbox.dialog(
+                    {
+                        title: "Job Logs For Job "+jobId,
+                        message:
+                                 '<div class="red" style="max-height:400px;overflow-y:auto;word-wrap: break-word;margin:10px;border: thin lightgray solid;border-radius: 5px;padding: 5px;">'+data.StdErr+'</div>' +
+                                 '<div class="" style="max-height:400px;overflow-y:auto;word-wrap: break-word;margin:10px;border: thin lightgray solid;border-radius: 5px;padding: 5px;">'+data.StdOut+'</div>',
+                        onEscape:true,
+                        size:"Large",
+                        buttons: dynButtons
+                    });
+				}
+
 				$('#jobs-table').tabulator({
 					height:350, // set height of table (in CSS or here), this enables the Virtual DOM and improves render speed dramatically (can be any valid css height value)
 					layout:"fitColumns", //fit columns to width of table (optional)
@@ -653,15 +748,18 @@
 					rowClick:function(e, row){ //trigger an alert message when the row is clicked
 					    //bootbox.alert('******ERROR OUTPUT******\n'+row.getData().StdErr+'\n\n******STANDARD OUTPUT******'+row.getData().StdOut, function(){ /* your callback code */ });
 
+                        var pending = row.getData().Status == "Pending";
+                        var active = row.getData().Status == "Active";
+
 					    $.get("/getJobOutput", {"jobId":row.getData().JobId}).done(function(data){
-                            bootbox.dialog(
-                            {
-                                message:
-                                 '<div class="text-center red" style="max-height:400px;overflow-y:auto;word-wrap: break-word;margin:10px">'+data.StdErr+'</div>' +
-                                 '<div class="text-center" style="max-height:400px;overflow-y:auto;word-wrap: break-word;margin:10px">'+data.StdOut+'</div>',
-                                 onEscape:true,
-                                 size:"Large"
-                            });
+					        if(pending){
+                                showJobModal(row.getData().JobId, data, "Remove Job", "Mark Job as Removed?", "Are you sure you want to remove this job? This cannot be undone.");
+                            }else if(active){
+                                showJobModal(row.getData().JobId, data, "Stop Job", "Stop Running Job?", "Are you sure you want to stop this job? This cannot be undone.");
+                            }else{
+                                showJobModal(row.getData().JobId, data, null, null, null);
+                            }
+
 					    });
 					},
 					initialSort:[

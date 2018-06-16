@@ -1,12 +1,12 @@
 import datetime
 import os
 import traceback
-from subprocess import Popen, PIPE
 from threading import Thread
 from time import sleep
 
 from Server.CommandRunner import CommandRunner
 from Server.FinishedJobStore import FinishedJobsStore
+from Server.GitHelper import gitClone
 
 
 class JobRunner(Thread):
@@ -40,8 +40,7 @@ class JobRunner(Thread):
                     start = datetime.datetime.now()
                     job.Start = str(start)
 
-                    p = Popen(['git', 'clone', '-b', job.GitBranch, job.GitRepo, cloneDir], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-                    output, err = p.communicate()
+                    output, err, p = gitClone(cloneDir, job)
 
                     print(output)
                     print(err)
@@ -52,8 +51,8 @@ class JobRunner(Thread):
                         job.Stop = str(datetime.datetime.now())
                         job.Status = "GitFailed"
                         job.ReturnCode = rc
-                        job.StdErr = err.decode()
-                        job.StdOut = output.decode()
+                        job.StdErr = err
+                        job.StdOut = output
 
                         self.CompletedJobs.add(job)
                         self.ActiveJobQueue.pop()
@@ -78,3 +77,4 @@ class JobRunner(Thread):
                     self.ActiveJobQueue.pop()
 
             sleep(1)
+

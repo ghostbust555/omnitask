@@ -1,10 +1,12 @@
 import json
 import os
+import traceback
 
 import cherrypy
 import psutil
 
 from Server.FinishedJobStore import FinishedJobsStore
+from Server.GitHelper import gitListBranches
 from Server.Job import Job
 from Server.JobRunner import JobRunner
 
@@ -12,26 +14,53 @@ pendingJobsQueue = []
 activeJobsQueue = []
 completedJobs = FinishedJobsStore("C:/test/logs")
 
-def obj_dict(obj):
-    return dict([(key,value) for key, value in obj.__dict__.items() if key not in ["StdOut", "StdErr"]])
-
 def output_dict(obj):
-    return dict([(key,value) for key, value in obj.__dict__.items() if key in ["StdOut", "StdErr"]])
+    return obj.__dict__
 
 def removeOutput(obj):
-    return [dict([(key,value) for key, value in y.items() if key not in ["StdOut", "StdErr"]]) for y in obj]
+    return dict([(key,value) for key, value in obj.items() if key not in ["StdOut", "StdErr"]])
 
 def onlyOutput(obj):
-    return [dict([(key,value) for key, value in y.items() if key in ["StdOut", "StdErr"]]) for y in obj]
+    return dict([(key,value) for key, value in obj.items() if key in ["StdOut", "StdErr", "JobId"]])
 
-def getAllJobs():
-    return [x.__dict__ for x in pendingJobsQueue] + [x.__dict__ for x in activeJobsQueue] + [row['Job'] for row in list(completedJobs.get().values())]
+def getAllJobsWithoutLogs():
+    return [x.getAsDictWithoutLogs() for x in pendingJobsQueue] + [x.getAsDictWithoutLogs() for x in activeJobsQueue] + [removeOutput(row['Job']) for row in list(completedJobs.get().values())]
+
+def getAllJobsWithOnlyLogs():
+    return [x.getAsDictWithoutLogs() for x in pendingJobsQueue] + [x.getAsDictWithoutLogs() for x in activeJobsQueue] + [onlyOutput(row['Job']) for row in list(completedJobs.get().values())]
 
 class JobsController(object):
     def __init__(self, pendingJobQueue:list, activeJobQueue:list, finishedJobs:FinishedJobsStore):
         self.PendingJobQueue = pendingJobQueue
         self.ActiveJobQueue = activeJobQueue
         self.FinishedJobs = finishedJobs
+
+    @cherrypy.expose
+    def stopJob(self, jobId:str):
+        try:
+            selectedJob = [job for job in self.ActiveJobQueue if str(job.JobId) == jobId][0]
+
+            if selectedJob._process is not None and selectedJob._process.poll() is None:
+                selectedJob._process.teminate()
+
+            return "ok"
+        except Exception:
+            raise cherrypy.HTTPError(500, str(traceback.format_exc()))
+
+
+    @cherrypy.expose
+    def getGitBranches(self, gitRepo:str):
+        cherrypy.response.headers['Content-Type'] = 'application/json'
+
+        output, err, p = gitListBranches(gitRepo)
+
+        if p.returncode != 0:
+            raise cherrypy.HTTPError(500, err+"\n"+output)
+
+        return json.dumps(
+            {
+                "Branches" : [x.split("\t")[1].split("refs/heads/")[1] for x in output.strip().split("\n")]
+            }).encode()
 
     @cherrypy.expose
     def getMachineState(self):
@@ -54,11 +83,11 @@ class JobsController(object):
     def getJobOutput(self, jobId):
         cherrypy.response.headers['Content-Type'] = 'application/json'
 
-        allJobs = getAllJobs()
+        allJobs = getAllJobsWithOnlyLogs()
 
-        selectedJob = next(x for x in allJobs if x["JobId"] == int(jobId))
+        selectedJob = next(x for x in allJobs if str(x["JobId"]) == jobId)
 
-        return json.dumps({"StdOut":selectedJob["StdOut"], "StdErr":selectedJob["StdErr"]}, default=output_dict).encode()
+        return json.dumps(selectedJob, default=output_dict).encode()
 
     @cherrypy.expose
     def getJobs(self):
@@ -71,9 +100,9 @@ class JobsController(object):
 
             return merged
 
-        allJobs = removeOutput(getAllJobs())
+        allJobs = getAllJobsWithoutLogs()
 
-        return json.dumps(allJobs, default=obj_dict).encode()
+        return json.dumps(allJobs).encode()
 
     @cherrypy.expose
     def test(self, num):

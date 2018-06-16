@@ -44,6 +44,8 @@ class CommandRunner:
         # Launch the command as subprocess.
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+        job._process = process
+
         # Launch the asynchronous readers of the process' stdout and stderr.
         stdout_queue = queue.Queue()
         stdout_reader = AsynchronousFileReader(process.stdout, stdout_queue, process)

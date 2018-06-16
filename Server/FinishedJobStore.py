@@ -27,6 +27,8 @@ class FinishedJobsStore:
 
 
     def add(self, job:Job):
+        job._process = None
+
         self._finishedJobs[job.JobId] = {
                 "Job":job.__dict__
             }

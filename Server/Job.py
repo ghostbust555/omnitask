@@ -12,3 +12,25 @@ class Job:
         self.Start = None
         self.Stop = None
         self.ResultObject = None
+        self._process = None
+
+    def getAsDictOfOnlyLogs(self):
+        return {
+            "StdOut" : self.StdOut,
+            "StdErr" : self.StdErr,
+            "JobId" : self.JobId,
+        }
+
+    def getAsDictWithoutLogs(self):
+        return {
+            "GitRepo" : self.GitRepo,
+            "GitBranch" : self.GitBranch,
+            "Src" : self.Src,
+            "Parameters" : self.Parameters,
+            "JobId" : self.JobId,
+            "Status" : self.Status,
+            "ReturnCode" : self.ReturnCode,
+            "Start" : self.Start,
+            "Stop" : self.Stop,
+            "ResultObject" : self.ResultObject
+        }
