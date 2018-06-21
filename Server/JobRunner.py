@@ -25,6 +25,9 @@ class JobRunner(Thread):
     def run(self):
         self._stopped = False
 
+        if not os.path.exists(self.CloneBaseDir):
+            os.mkdir(self.CloneBaseDir)
+
         while not self._stopped:
             if len(self.PendingJobQueue) > 0:
                 job = self.PendingJobQueue.pop()
@@ -65,7 +68,7 @@ class JobRunner(Thread):
                         job.Stop = str(datetime.datetime.now())
                         job.ReturnCode = p.poll()
 
-                        job.Status = "Complete" if rc == 0 else "Failed"
+                        job.Status = "Complete" if job.ReturnCode == 0 else "Failed"
                         self.CompletedJobs.add(job)
                         self.ActiveJobQueue.pop()
                 except Exception as e:

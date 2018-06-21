@@ -35,7 +35,7 @@ class AsynchronousFileReader(threading.Thread):
 
 class CommandRunner:
     @staticmethod
-    def RunCommand(command, job:Job):
+    def RunCommand(command, job:Job, verbose = False):
         '''
         Example of how to consume standard output and standard error of
         a subprocess asynchronously without risk on deadlocking.
@@ -61,6 +61,9 @@ class CommandRunner:
                 try:
                     line = stdout_queue.get_nowait()
                     job.StdOut += line.decode()+"\n"
+
+                    if verbose:
+                        print(line.decode())
                 except queue.Empty:
                     break
 
@@ -69,6 +72,9 @@ class CommandRunner:
                 try:
                     line = stderr_queue.get_nowait()
                     job.StdErr += line.decode()+"\n"
+
+                    if verbose:
+                        print(line.decode())
                 except queue.Empty:
                     break
 

@@ -12,6 +12,9 @@ class FinishedJobsStore:
     def loadSavedJobs(self):
         jobCounter = 0
 
+        if not os.path.exists(self.FolderPath):
+            os.mkdir(self.FolderPath)
+
         for name in os.listdir(self.FolderPath):
             try:
                 jobCounter = max(jobCounter, int(name)+1)

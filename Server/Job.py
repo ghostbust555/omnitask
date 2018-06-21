@@ -1,10 +1,11 @@
 class Job:
-    def __init__(self, gitRepo:str, gitBranch:str, src:str, parameters:str, jobId:int):
+    def __init__(self, gitRepo:str, gitBranch:str, src:str, parameters:str, jobId:int, jobTag = ""):
         self.GitRepo = gitRepo
         self.GitBranch = gitBranch
         self.Src = src
         self.Parameters = parameters
         self.JobId = jobId
+        self.Tag = jobTag
         self.Status = "Pending"
         self.StdOut = ""
         self.StdErr = ""
