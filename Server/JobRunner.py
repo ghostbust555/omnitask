@@ -60,6 +60,11 @@ class JobRunner(Thread):
                         self.CompletedJobs.add(job)
                         self.ActiveJobQueue.pop()
                     else:
+                        requirementsPath = os.path.abspath(cloneDir+"/requirements.txt")
+                        
+                        if os.path.exists(requirementsPath):
+                             p = CommandRunner.RunCommand(['pip', "install", "-r", requirementsPath], job)
+
                         p = CommandRunner.RunCommand(['python', "{}/{}".format(cloneDir, job.Src), job.Parameters], job)
 
                         print("JOB OUT-"+job.StdOut)

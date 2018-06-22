@@ -13,7 +13,7 @@ from Server.GitHelper import gitListBranches
 from Server.Job import Job
 from Server.JobRunner import JobRunner
 
-jobsRootPath = os.path.expanduser('~')+"/OmniTasks"
+jobsRootPath = os.path.abspath(os.path.expanduser('~')+"/OmniTasks")
 
 print("Hosting OmniTasks, clone location {}".format(jobsRootPath))
 
