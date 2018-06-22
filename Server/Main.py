@@ -155,5 +155,6 @@ def launchTensorBoard(tensorBoardPath):
 t = threading.Thread(target=launchTensorBoard, args=([jobsRootPath]), daemon=True)
 t.start()
 
-#cherrypy.server.socket_host = socket.gethostname().lower()
+ipAddress = socket.gethostbyname(socket.gethostname())
+cherrypy.server.socket_host = ipAddress
 cherrypy.quickstart(JobsController(pendingJobsQueue, activeJobsQueue, completedJobs), '/', config=conf)
