@@ -195,7 +195,7 @@
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
 			$(document).ready( function () {
-				$("tensorboard-container").attr('src', "http://"+window.location.hostname+":8080");
+				$("#tensorboard-container")[0].src = "http://"+window.location.hostname+":6006";
 			} );
 		</script>
 	</body>
