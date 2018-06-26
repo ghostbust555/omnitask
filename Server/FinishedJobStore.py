@@ -1,7 +1,7 @@
 import json
 import os
 
-from Server.Job import Job
+from Job import Job
 
 
 class FinishedJobsStore:

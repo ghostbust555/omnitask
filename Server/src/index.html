@@ -523,8 +523,8 @@
                     {
                         title: "Job Logs For Job "+jobId,
                         message:
-                                 '<div class="red" style="max-height:400px;overflow-y:auto;word-wrap: break-word;margin:10px;border: thin lightgray solid;border-radius: 5px;padding: 5px;">'+data.StdErr+'</div>' +
-                                 '<div class="" style="max-height:400px;overflow-y:auto;word-wrap: break-word;margin:10px;border: thin lightgray solid;border-radius: 5px;padding: 5px;">'+data.StdOut+'</div>',
+                                 '<pre class="red" style="max-height:400px;overflow-y:auto;word-wrap: break-word;margin:10px;border: thin lightgray solid;border-radius: 5px;padding: 5px;">'+data.StdErr+'</pre>' +
+                                 '<pre class="" style="max-height:400px;overflow-y:auto;word-wrap: break-word;margin:10px;border: thin lightgray solid;border-radius: 5px;padding: 5px;">'+data.StdOut+'</pre>',
                         onEscape:true,
                         size:"Large",
                         buttons: dynButtons

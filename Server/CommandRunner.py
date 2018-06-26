@@ -3,7 +3,7 @@ import subprocess
 import threading
 import time
 
-from Server.Job import Job
+from Job import Job
 
 
 class AsynchronousFileReader(threading.Thread):
@@ -35,14 +35,16 @@ class AsynchronousFileReader(threading.Thread):
 
 class CommandRunner:
     @staticmethod
-    def RunCommand(command, job:Job, verbose = False):
+    def RunCommand(command, job:Job, verbose = False, dir=None):
         '''
         Example of how to consume standard output and standard error of
         a subprocess asynchronously without risk on deadlocking.
         '''
 
+        print(command)
+		
         # Launch the command as subprocess.
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=dir)
 
         job._process = process
 

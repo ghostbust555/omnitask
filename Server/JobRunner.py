@@ -4,9 +4,9 @@ import traceback
 from threading import Thread
 from time import sleep
 
-from Server.CommandRunner import CommandRunner
-from Server.FinishedJobStore import FinishedJobsStore
-from Server.GitHelper import gitClone
+from CommandRunner import CommandRunner
+from FinishedJobStore import FinishedJobsStore
+from GitHelper import gitClone
 
 
 class JobRunner(Thread):
@@ -65,7 +65,7 @@ class JobRunner(Thread):
                         if os.path.exists(requirementsPath):
                              p = CommandRunner.RunCommand(['pip', "install", "-r", requirementsPath], job)
 
-                        p = CommandRunner.RunCommand(['python', "{}/{}".format(cloneDir, job.Src), job.Parameters], job)
+                        p = CommandRunner.RunCommand(['python', '-m', job.Src.replace(".py", "").replace("/", ".").replace("\\", "."), job.Parameters], job, dir=cloneDir)
 
                         print("JOB OUT-"+job.StdOut)
                         print("JOB ERR-"+job.StdErr)

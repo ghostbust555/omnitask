@@ -7,11 +7,11 @@ import traceback
 import cherrypy
 import psutil
 
-from Server import CommandRunner
-from Server.FinishedJobStore import FinishedJobsStore
-from Server.GitHelper import gitListBranches
-from Server.Job import Job
-from Server.JobRunner import JobRunner
+import CommandRunner
+from FinishedJobStore import FinishedJobsStore
+from GitHelper import gitListBranches
+from Job import Job
+from JobRunner import JobRunner
 
 jobsRootPath = os.path.abspath(os.path.expanduser('~')+"/OmniTasks")
 
@@ -138,7 +138,7 @@ conf = {
         'tools.staticdir.on':   True,  # Enable or disable this rule.
         'tools.staticdir.root': static_dir,
         'tools.staticdir.dir':  '',
-        'tools.staticdir.index' : "index.html",
+        'tools.staticdir.index' : "index.html"
     }
 }
 
@@ -157,4 +157,5 @@ t.start()
 
 ipAddress = socket.gethostbyname(socket.gethostname())
 cherrypy.server.socket_host = ipAddress
+cherrypy.server.socket_port = 80
 cherrypy.quickstart(JobsController(pendingJobsQueue, activeJobsQueue, completedJobs), '/', config=conf)
